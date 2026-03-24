@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vehicle Fuel Entry – HR Department</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;min-height:100vh;background:linear-gradient(180deg,#0d1b3e 0%,#1a1a2e 55%,#111 100%);overflow-x:hidden}
+
+  /* ── Stars ── */
+  #stars{position:fixed;top:0;left:0;width:100%;height:55%;pointer-events:none;z-index:0}
+  .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle 2.5s ease-in-out infinite}
+  @keyframes twinkle{0%,100%{opacity:0.15}50%{opacity:1}}
+
+  /* ── Moon ── */
+  .moon{position:fixed;top:22px;right:40px;width:36px;height:36px;background:#f0e68c;border-radius:50%;box-shadow:0 0 24px rgba(240,230,140,0.55);z-index:1}
+
+  /* ── City ── */
+  #city{position:fixed;bottom:92px;left:0;right:0;height:130px;pointer-events:none;z-index:1}
+  .building{position:absolute;bottom:0;background:#0d1b3e;border-top:2px solid #1e3a6e}
+  .win{position:absolute;width:7px;height:9px;background:#f5c518;opacity:0.7;border-radius:1px}
+
+  /* ── Road ── */
+  .road{position:fixed;bottom:0;left:0;right:0;height:92px;background:#1e1e1e;border-top:3px solid #333;z-index:2}
+  .road-line{position:absolute;bottom:40px;height:6px;width:60px;background:#f5c518;border-radius:3px;animation:roadMove 1.4s linear infinite}
+  @keyframes roadMove{from{left:110%}to{left:-80px}}
+  .road-line:nth-child(2){animation-delay:-0.47s}
+  .road-line:nth-child(3){animation-delay:-0.93s}
+  .road-line:nth-child(4){animation-delay:-1.4s}
+
+  /* ── Car ── */
+  .car-wrap{position:fixed;bottom:96px;animation:carDrive 12s linear infinite;z-index:3}
+  @keyframes carDrive{0%{left:-220px}100%{left:110%}}
+  .car-svg{width:160px;height:auto;filter:drop-shadow(0 4px 16px rgba(245,197,24,0.25))}
+  .wheel-front,.wheel-back{animation:spin 0.5s linear infinite;transform-origin:center}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .beam{position:absolute;right:-58px;top:18px;width:78px;height:22px;background:linear-gradient(90deg,rgba(255,230,100,0.55),transparent);border-radius:0 50% 50% 0;pointer-events:none}
+
+  /* ── Page layout ── */
+  .page{position:relative;z-index:10;display:flex;justify-content:center;align-items:flex-start;padding:30px 16px 160px;min-height:100vh}
+
+  /* ── Form card ── */
+  .card{width:100%;max-width:580px;background:rgba(8,8,24,0.88);backdrop-filter:blur(14px);border:1px solid rgba(245,197,24,0.28);border-radius:16px;padding:28px 28px 24px;box-shadow:0 0 50px rgba(245,197,24,0.07)}
+
+  .card-title{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:#f5c518;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
+  .card-sub{font-size:11px;color:rgba(255,255,255,0.38);letter-spacing:1px;text-transform:uppercase;margin-bottom:22px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .full{grid-column:1/-1}
+
+  label{font-size:11px;color:rgba(245,197,24,0.75);font-weight:500;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:5px}
+
+  input,select,textarea{
+    width:100%;background:rgba(255,255,255,0.06);
+    border:1px solid rgba(245,197,24,0.25);
+    border-radius:8px;color:#fff;
+    font-family:'DM Sans',sans-serif;font-size:14px;
+    padding:10px 13px;outline:none;
+    transition:border-color 0.2s,background 0.2s
+  }
+  input:focus,select:focus,textarea:focus{border-color:#f5c518;background:rgba(245,197,24,0.08)}
+  select option{background:#1a1a2e;color:#fff}
+  input::placeholder,textarea::placeholder{color:rgba(255,255,255,0.22)}
+
+  .submit-btn{
+    width:100%;margin-top:18px;padding:14px;
+    background:#f5c518;color:#0a0a1e;
+    font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;
+    letter-spacing:2px;text-transform:uppercase;
+    border:none;border-radius:10px;cursor:pointer;
+    transition:transform 0.15s,box-shadow 0.2s
+  }
+  .submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,197,24,0.4)}
+  .submit-btn:active{transform:translateY(0)}
+  .submit-btn:disabled{opacity:0.55;cursor:not-allowed;transform:none}
+
+  .status{margin-top:13px;font-size:13px;text-align:center;min-height:20px;color:rgba(255,255,255,0.45)}
+  .status.ok{color:#4ade80}
+  .status.err{color:#f87171}
+  .status.loading{color:#f5c518}
+
+  @media(max-width:480px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div id="stars"></div>
+<div class="moon"></div>
+
+<!-- City skyline -->
+<div id="city"></div>
+
+<!-- Road -->
+<div class="road">
+  <div class="road-line"></div>
+  <div class="road-line"></div>
+  <div class="road-line"></div>
+  <div class="road-line"></div>
+</div>
+
+<!-- Animated Car -->
+<div class="car-wrap">
+  <div class="beam"></div>
+  <svg class="car-svg" viewBox="0 0 180 80" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="32" width="155" height="34" rx="8" fill="#c0392b"/>
+    <path d="M50 32 Q60 12 90 10 Q120 10 130 32Z" fill="#a93226"/>
+    <path d="M56 30 Q63 16 80 15 L95 15 L95 30Z" fill="#85c1e9" opacity="0.85"/>
+    <path d="M98 30 L98 15 L118 15 Q128 15 130 30Z" fill="#85c1e9" opacity="0.85"/>
+    <line x1="97" y1="32" x2="97" y2="62" stroke="#e74c3c" stroke-width="1.5"/>
+    <rect x="55" y="40" width="36" height="14" rx="3" fill="rgba(0,0,0,0.45)"/>
+    <text x="73" y="51" fill="#f5c518" font-size="8" font-weight="700" text-anchor="middle" font-family="Rajdhani,sans-serif" letter-spacing="1">HR DEPT</text>
+    <ellipse cx="166" cy="45" rx="8" ry="6" fill="#fff9c4"/>
+    <ellipse cx="166" cy="45" rx="5" ry="4" fill="#fff176"/>
+    <rect x="10" y="38" width="7" height="10" rx="2" fill="#e74c3c"/>
+    <rect x="10" y="50" width="7" height="8" rx="2" fill="#ff8a80"/>
+    <rect x="3" y="52" width="10" height="8" rx="3" fill="#888"/>
+    <rect x="162" y="50" width="12" height="10" rx="3" fill="#888"/>
+    <g class="wheel-back">
+      <circle cx="48" cy="64" r="14" fill="#222"/>
+      <circle cx="48" cy="64" r="10" fill="#444"/>
+      <circle cx="48" cy="64" r="4" fill="#f5c518"/>
+      <line x1="48" y1="54" x2="48" y2="74" stroke="#666" stroke-width="2"/>
+      <line x1="38" y1="64" x2="58" y2="64" stroke="#666" stroke-width="2"/>
+    </g>
+    <g class="wheel-front">
+      <circle cx="132" cy="64" r="14" fill="#222"/>
+      <circle cx="132" cy="64" r="10" fill="#444"/>
+      <circle cx="132" cy="64" r="4" fill="#f5c518"/>
+      <line x1="132" y1="54" x2="132" y2="74" stroke="#666" stroke-width="2"/>
+      <line x1="122" y1="64" x2="142" y2="64" stroke="#666" stroke-width="2"/>
+    </g>
+  </svg>
+</div>
+
+<!-- Main Page -->
+<div class="page">
+  <div class="card">
+    <div class="card-title">⛽ Vehicle Fuel Entry</div>
+    <div class="card-sub">HR Department · Vehicle Tracking System</div>
+
+    <div class="grid">
+
+      <div>
+        <label>Vehicle Type</label>
+        <input id="vtype" type="text" placeholder="e.g. Car, SUV, Van, Bike…"/>
+      </div>
+
+      <div>
+        <label>Vehicle Number</label>
+        <input id="vnum" type="text" placeholder="e.g. WB 01 AB 1234"/>
+      </div>
+
+      <div>
+        <label>Employee Name</label>
+        <input id="ename" type="text" placeholder="Full name"/>
+      </div>
+
+      <div>
+        <label>Open K.M</label>
+        <input id="okm" type="number" placeholder="Current odometer"/>
+      </div>
+
+      <div>
+        <label>Refueling (Litres)</label>
+        <input id="rltr" type="number" placeholder="e.g. 35.5" step="0.1"/>
+      </div>
+
+      <div>
+        <label>Refueling (₹)</label>
+        <input id="rrs" type="number" placeholder="e.g. 3150"/>
+      </div>
+
+      <div class="full">
+        <label>Petrol Pump Name</label>
+        <input id="pump" type="text" placeholder="Pump name / location"/>
+      </div>
+
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitForm()">▶ SUBMIT TO SHEET</button>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlnRBmfboRwS_zBaob8WYyp1RSyyzu3Hk5NiOrAVKKOHlV3yCUqyBDOPlCjsfVjqKnOA/exec";
+
+  // Stars
+  const starsEl = document.getElementById('stars');
+  for(let i = 0; i < 70; i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2.5 + 0.8;
+    s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*2}s`;
+    starsEl.appendChild(s);
+  }
+
+  // City buildings
+  const city = document.getElementById('city');
+  const heights = [60,95,72,115,82,58,105,78,68,98,52,88,65,100,75];
+  const widths  = [45,36,55,42,50,38,48,44,52,36,46,40,54,38,50];
+  let left = 0;
+  heights.forEach((h, i) => {
+    const b = document.createElement('div');
+    b.className = 'building';
+    const w = widths[i % widths.length];
+    b.style.cssText = `height:${h}px;width:${w}px;left:${left}px`;
+    const wrows = Math.floor(h / 14);
+    const wcols = Math.floor(w / 12);
+    for(let r = 0; r < wrows; r++){
+      for(let c = 0; c < wcols; c++){
+        if(Math.random() > 0.35){
+          const win = document.createElement('div');
+          win.className = 'win';
+          win.style.cssText = `top:${5 + r*14}px;left:${4 + c*12}px;opacity:${0.3 + Math.random()*0.7}`;
+          b.appendChild(win);
+        }
+      }
+    }
+    city.appendChild(b);
+    left += w + 4;
+  });
+
+  function submitForm() {
+    const fields = {
+      vehicleType:    document.getElementById('vtype').value.trim(),
+      vehicleNumber:  document.getElementById('vnum').value.trim(),
+      employeeName:   document.getElementById('ename').value.trim(),
+      openKM:         document.getElementById('okm').value.trim(),
+      refuelLtr:      document.getElementById('rltr').value.trim(),
+      refuelRs:       document.getElementById('rrs').value.trim(),
+      pumpName:       document.getElementById('pump').value.trim()
+    };
+
+    const st  = document.getElementById('status');
+    const btn = document.getElementById('submitBtn');
+
+    if(Object.values(fields).some(v => v === '')){
+      st.className = 'status err';
+      st.textContent = '⚠ Please fill in all fields before submitting.';
+      return;
+    }
+
+    const now   = new Date();
+    fields.timestamp = now.toLocaleString('en-IN');
+    fields.date      = now.toLocaleDateString('en-IN');
+
+    btn.disabled = true;
+    st.className = 'status loading';
+    st.textContent = '⏳ Submitting to Google Sheet…';
+
+    const params = new URLSearchParams(fields);
+
+    fetch(SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' })
+      .then(() => {
+        st.className = 'status ok';
+        st.textContent = '✅ Data submitted successfully to Google Sheet!';
+        btn.disabled = false;
+        ['vtype','vnum','ename','okm','rltr','rrs','pump'].forEach(id => {
+          document.getElementById(id).value = '';
+        });
+      })
+      .catch(() => {
+        st.className = 'status err';
+        st.textContent = '✗ Submission failed. Please check your internet connection.';
+        btn.disabled = false;
+      });
+  }
+</script>
+</body>
+</html>
